@@ -62,8 +62,13 @@ var app = new function () {
     };
 
     // Search for tasks based on the selected user
-    this.Search = function () {
-        var searchUser = document.getElementById('search-user').value;
+    this.Search = function (searchUser) {
+        if (!searchUser) {        
+            searchUser = document.getElementById('search-user').value;
+        }
+    // Print the searchUser value to the console
+    console.log('Search User:', searchUser);
+
         var filteredTasks = this.tasks.filter(function (task) {
             return task.assignedTo === searchUser;
         });
@@ -95,44 +100,52 @@ var app = new function () {
         }
     };
 
-    // Edit a task in place
-    this.Edit = function (index) {
-        var task = this.tasks[index];
-        var row = this.el.rows[index];
-        var taskCell = row.cells[0];
-        var assignedCell = row.cells[1];
-        var dueDateCell = row.cells[2];
+// Edit a task in place
+this.Edit = function (index) {
+    var task = this.tasks[index];
+    var row = this.el.rows[index];
+    var taskCell = row.cells[0];
+    var assignedCell = row.cells[1];
+    var dueDateCell = row.cells[2];
 
-        // Replace content with input fields for inline editing
-        taskCell.innerHTML = `<input type="text" value="${task.task}" class="form-control">`;
-        assignedCell.innerHTML = `<select class="form-control">
-                                    ${this.users.map(user => 
-                                        `<option value="${user}" ${user === task.assignedTo ? 'selected' : ''}>${user}</option>`
-                                    ).join('')}
-                                  </select>`;
-        dueDateCell.innerHTML = `<input type="date" value="${task.dueDate}" class="form-control">`;
+    // Replace content with input fields for inline editing
+    taskCell.innerHTML = `<input type="text" value="${task.task}" class="form-control">`;
+    assignedCell.innerHTML = `<select class="form-control">
+                                ${this.users.map(user => 
+                                    `<option value="${user}" ${user === task.assignedTo ? 'selected' : ''}>${user}</option>`
+                                ).join('')}
+                              </select>`;
+    dueDateCell.innerHTML = `<input type="date" value="${task.dueDate}" class="form-control">`;
 
-        var taskInput = taskCell.querySelector('input');
-        var assignedInput = assignedCell.querySelector('select');
-        var dueDateInput = dueDateCell.querySelector('input');
+    var taskInput = taskCell.querySelector('input');
+    var assignedInput = assignedCell.querySelector('select');
+    var dueDateInput = dueDateCell.querySelector('input');
 
-        // Save changes on blur
-        taskInput.addEventListener('blur', function () {
-            task.task = taskInput.value;
-            task.assignedTo = assignedInput.value;
-            task.dueDate = dueDateInput.value;
+    // Save changes on blur
+    taskInput.addEventListener('blur', function () {
+        // Update the task properties
+        task.task = taskInput.value;
+        task.assignedTo = assignedInput.value;
+        task.dueDate = dueDateInput.value;
 
-            localStorage.setItem('tasks', JSON.stringify(this.tasks));
-            this.FetchAll();
-        }.bind(this));
-    };
+        // Save the updated tasks array to localStorage
+        localStorage.setItem('tasks', JSON.stringify(this.tasks));
+
+        // Refresh the task list
+        this.FetchAll();
+    }.bind(this));  // Bind the correct context to 'this'
+};
 
     // Delete a task
     this.Delete = function (index) {
+    // Get the 'assignedTo' value of the task being deleted
+    var assignedToUser = this.tasks[index].assignedTo;
         this.tasks.splice(index, 1);  // Remove the task at the specified index
         localStorage.setItem('tasks', JSON.stringify(this.tasks));  // Update localStorage with the new tasks array
         this.FetchAll();  // Refresh the task list
-        this.Search();  // Reapply search filter to show only tasks for the currently selected user
+        this.Search(assignedToUser);  // Reapply search filter to show only tasks for the currently selected user
+        // Print the searchUser value to the console
+        console.log('Delete user:', assignedToUser);
     };
 
 
