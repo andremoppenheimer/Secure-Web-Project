@@ -61,34 +61,30 @@ var app = new function () {
         }
     };
 
-// Search for tasks based on the selected user
-this.Search = function () {
-    // Get the value of the selected user from the dropdown
-    var searchUser = document.getElementById('assigned-tasks-dropdown').value;  // Assuming the dropdown has id 'assigned-tasks-dropdown'
-
-    // Filter the tasks based on the assigned user
-    var filteredTasks = this.tasks.filter(function (task) {
-        return task.assignedTo === searchUser;
-    });
-
-    var data = '';
-    if (filteredTasks.length > 0) {
-        filteredTasks.forEach((task, i) => {
-            data += '<tr>';
-            data += `<td>${task.task}</td>`;
-            data += `<td>${task.assignedTo}</td>`;
-            data += `<td>${task.dueDate}</td>`;
-            data += `<td><button class="btn btn-primary" onclick="app.HandleAction('edit', ${i})">Edit</button> `;
-            data += `<button class="btn btn-danger" onclick="app.HandleAction('delete', ${i})">Delete</button></td>`;
-            data += '</tr>';
+    // Search for tasks based on the selected user
+    this.Search = function () {
+        var searchUser = document.getElementById('search-user').value;
+        var filteredTasks = this.tasks.filter(function (task) {
+            return task.assignedTo === searchUser;
         });
-    } else {
-        data = '<tr><td colspan="4">No tasks found for the selected user.</td></tr>';
-    }
 
-    this.el.innerHTML = data;
-};
+        var data = '';
+        if (filteredTasks.length > 0) {
+            filteredTasks.forEach((task, i) => {
+                data += '<tr>';
+                data += `<td>${task.task}</td>`;
+                data += `<td>${task.assignedTo}</td>`;
+                data += `<td>${task.dueDate}</td>`;
+                data += `<td><button class="btn btn-primary" onclick="app.HandleAction('edit', ${i})">Edit</button> `;
+                data += `<button class="btn btn-danger" onclick="app.HandleAction('delete', ${i})">Delete</button></td>`;
+                data += '</tr>';
+            });
+        } else {
+            data = '<tr><td colspan="4">No tasks found for the selected user.</td></tr>';
+        }
 
+        this.el.innerHTML = data;
+    };
 
     // Handle Edit or Delete actions
     this.HandleAction = function (action, index) {
