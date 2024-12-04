@@ -1,12 +1,65 @@
-<html>
-<head><meta charset "UTF-8">
-<title>Family Planner</title>
-<link rel="stylesheet" type="text/css" href="style.css">
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Planner</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
 </head>
 <body>
-    <div class"title">
+    <div class="container">
         <h1>Family Planner</h1>
+
+        <!-- Logout Button (only shown when logged in) -->
+        <div id="logout-button" style="display:none;">
+            <button onclick="app.Logout()" class="btn btn-danger mb-3">Logout</button>
+        </div>
+
+        <!-- Task Creator Section -->
+        <div class="form mb-4">
+            <h3>Task Creator</h3>
+            <form action="javascript:void(0);" method="POST" onsubmit="app.Add()">
+                <input type="text" id="add-todo" placeholder="Task Name" class="form-control mb-2">
+                
+                <!-- User Selection Dropdown for assigning tasks -->
+                <select id="assign-user" class="form-control mb-2">
+                    <option value="admin">Admin</option>
+                    <option value="user1">User1</option>
+                    <option value="user2">User2</option>
+                </select>
+
+                <!-- Due Date Picker -->
+                <input type="date" id="due-date" class="form-control mb-2">
+
+                <!-- Add Task Button -->
+                <input type="submit" value="Add Task" class="btn btn-primary">
+            </form>
+        </div>
+
+        <!-- Assigned Tasks Section -->
+        <div class="form mb-4">
+            <h3>Assigned Tasks</h3>
+            <!-- Search Section for Filtering Tasks -->
+            <select id="search-user" class="form-control mb-2">
+                <option value="admin">Admin</option>
+                <option value="user1">User1</option>
+                <option value="user2">User2</option>
+            </select>
+            <button onclick="app.Search()" class="btn btn-info mb-2">Search</button>
+            
+            <table class="table">
+                <tr class="to-do">
+                    <th>Task</th>
+                    <th>Assigned To</th>
+                    <th>Due Date</th>
+                    <th>Actions</th>
+                    <th>Go</th>
+                </tr>
+                <tbody id="tasks"></tbody>
+            </table>
+        </div>
     </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
