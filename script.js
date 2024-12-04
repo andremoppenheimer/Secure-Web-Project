@@ -108,22 +108,14 @@ this.Edit = function (index) {
     var assignedCell = row.cells[1];
     var dueDateCell = row.cells[2];
 
-    // Replace content with input fields for inline editing
-    taskCell.innerHTML = `<input type="text" value="${task.task}" class="form-control">`;
-    assignedCell.innerHTML = `<select class="form-control">
-                                ${this.users.map(user => 
-                                    `<option value="${user}" ${user === task.assignedTo ? 'selected' : ''}>${user}</option>`
-                                ).join('')}
-                              </select>`;
-    dueDateCell.innerHTML = `<input type="date" value="${task.dueDate}" class="form-control">`;
+    // Check if the row is already in edit mode
+    if (taskCell.querySelector('input')) {
+        // If already in edit mode, save the changes
+        var taskInput = taskCell.querySelector('input');
+        var assignedInput = assignedCell.querySelector('select');
+        var dueDateInput = dueDateCell.querySelector('input');
 
-    var taskInput = taskCell.querySelector('input');
-    var assignedInput = assignedCell.querySelector('select');
-    var dueDateInput = dueDateCell.querySelector('input');
-
-    // Save changes on blur
-    taskInput.addEventListener('blur', function () {
-        // Update the task properties
+        // Update the task properties with new values
         task.task = taskInput.value;
         task.assignedTo = assignedInput.value;
         task.dueDate = dueDateInput.value;
@@ -131,9 +123,25 @@ this.Edit = function (index) {
         // Save the updated tasks array to localStorage
         localStorage.setItem('tasks', JSON.stringify(this.tasks));
 
-        // Refresh the task list
+        // Switch to view mode and refresh the task list
         this.FetchAll();
-    }.bind(this));  // Bind the correct context to 'this'
+    } else {
+        // If not in edit mode, switch to edit mode (replace with input fields)
+        taskCell.innerHTML = `<input type="text" value="${task.task}" class="form-control">`;
+        assignedCell.innerHTML = `<select class="form-control">
+                                    ${this.users.map(user => 
+                                        `<option value="${user}" ${user === task.assignedTo ? 'selected' : ''}>${user}</option>`
+                                    ).join('')}
+                                  </select>`;
+        dueDateCell.innerHTML = `<input type="date" value="${task.dueDate}" class="form-control">`;
+
+        var taskInput = taskCell.querySelector('input');
+        var assignedInput = assignedCell.querySelector('select');
+        var dueDateInput = dueDateCell.querySelector('input');
+
+        // Optionally, you could add event listeners for 'Enter' key or blur to save changes.
+        // But here, we wait for the user to press the "Edit" button again to save the changes.
+    }
 };
 
     // Delete a task
