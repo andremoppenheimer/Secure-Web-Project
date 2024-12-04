@@ -1,4 +1,4 @@
-var app = new function() {
+var app = new function () {
     this.el = document.getElementById('tasks');
     this.tasks = JSON.parse(localStorage.getItem('tasks')) || []; // Get tasks from localStorage
     this.currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
@@ -6,45 +6,42 @@ var app = new function() {
     // List of users (for demo purposes, can be expanded)
     this.users = ['admin', 'user1', 'user2'];
 
-    // Function to check if the user is logged in
-    this.isLoggedIn = function() {
+    // Check if the user is logged in
+    this.isLoggedIn = function () {
         return this.currentUser !== null;
     };
 
     // Fetch all tasks
-    this.FetchAll = function() {
+    this.FetchAll = function () {
         var data = '';
-
         if (!this.isLoggedIn()) {
             alert('You need to log in to view tasks.');
             return;
         }
 
-        if (this.tasks.length > 0) {
-            for (i = 0; i < this.tasks.length; i++) {
-                data += '<tr>';
-                data += '<td>' + this.tasks[i].task + '</td>';
-                data += '<td>' + this.tasks[i].assignedTo + '</td>';
-                data += '<td>' + this.tasks[i].dueDate + '</td>';
-                data += '<td>';
-                data += '<select onchange="app.HandleAction(this, ' + i + ')">';
-                data += '<option value="">Select Action</option>';
-                data += '<option value="edit">Edit</option>';
-                data += '<option value="delete">Delete</option>';
-                data += '</select>';
-                data += '</td>';
-                data += '</tr>';
-            }
+        // Display tasks for the logged-in user
+        this.tasks.forEach((task, i) => {
+            data += '<tr>';
+            data += `<td>${task.task}</td>`;
+            data += `<td>${task.assignedTo}</td>`;
+            data += `<td>${task.dueDate}</td>`;
+            data += `<td><button class="btn btn-primary" onclick="app.HandleAction('edit', ${i})">Edit</button> `;
+            data += `<button class="btn btn-danger" onclick="app.HandleAction('delete', ${i})">Delete</button></td>`;
+            data += '</tr>';
+        });
+
+        if (this.tasks.length === 0) {
+            data = '<tr><td colspan="4">No tasks found.</td></tr>';
         }
-        
+
         this.Count(this.tasks.length);
-        return this.el.innerHTML = data;
+        this.el.innerHTML = data;
     };
 
     // Add a new task
-    this.Add = function() {
+    this.Add = function () {
         if (!this.isLoggedIn() || this.currentUser.role !== 'admin') {
-            alert("You need to log in as an admin to add tasks.");
+            alert('You need to log in as an admin to add tasks.');
             return;
         }
 
@@ -56,49 +53,45 @@ var app = new function() {
         var dueDate = dueDateInput.value;
 
         if (task && dueDate) {
-            // Add the new task with the assigned user and due date
             this.tasks.push({ task: task.trim(), assignedTo: assignedUser, dueDate: dueDate });
             taskInput.value = '';
             dueDateInput.value = '';
-            localStorage.setItem('tasks', JSON.stringify(this.tasks)); // Store tasks in localStorage
+            localStorage.setItem('tasks', JSON.stringify(this.tasks));
             this.FetchAll();
         }
     };
 
-    // Search for tasks based on the selected user
-    this.Search = function() {
-        var searchUser = document.getElementById('search-user').value;
+// Search for tasks based on the selected user
+this.Search = function () {
+    // Get the value of the selected user from the dropdown
+    var searchUser = document.getElementById('assigned-tasks-dropdown').value;  // Assuming the dropdown has id 'assigned-tasks-dropdown'
 
-        var filteredTasks = this.tasks.filter(function(task) {
-            return task.assignedTo === searchUser;
+    // Filter the tasks based on the assigned user
+    var filteredTasks = this.tasks.filter(function (task) {
+        return task.assignedTo === searchUser;
+    });
+
+    var data = '';
+    if (filteredTasks.length > 0) {
+        filteredTasks.forEach((task, i) => {
+            data += '<tr>';
+            data += `<td>${task.task}</td>`;
+            data += `<td>${task.assignedTo}</td>`;
+            data += `<td>${task.dueDate}</td>`;
+            data += `<td><button class="btn btn-primary" onclick="app.HandleAction('edit', ${i})">Edit</button> `;
+            data += `<button class="btn btn-danger" onclick="app.HandleAction('delete', ${i})">Delete</button></td>`;
+            data += '</tr>';
         });
+    } else {
+        data = '<tr><td colspan="4">No tasks found for the selected user.</td></tr>';
+    }
 
-        var data = '';
-        if (filteredTasks.length > 0) {
-            for (i = 0; i < filteredTasks.length; i++) {
-                data += '<tr>';
-                data += '<td>' + filteredTasks[i].task + '</td>';
-                data += '<td>' + filteredTasks[i].assignedTo + '</td>';
-                data += '<td>' + filteredTasks[i].dueDate + '</td>';
-                data += '<td>';
-                data += '<select onchange="app.HandleAction(this, ' + i + ')">';
-                data += '<option value="">Select Action</option>';
-                data += '<option value="edit">Edit</option>';
-                data += '<option value="delete">Delete</option>';
-                data += '</select>';
-                data += '</td>';
-                data += '</tr>';
-            }
-        } else {
-            data = '<tr><td colspan="4">No tasks found for selected user.</td></tr>';
-        }
+    this.el.innerHTML = data;
+};
 
-        this.el.innerHTML = data;
-    };
 
     // Handle Edit or Delete actions
-    this.HandleAction = function(select, index) {
-        var action = select.value;
+    this.HandleAction = function (action, index) {
         if (action === 'edit') {
             this.Edit(index);
         } else if (action === 'delete') {
@@ -106,48 +99,67 @@ var app = new function() {
         }
     };
 
-    // Edit a task (redirect to edit page)
-    this.Edit = function(index) {
+    // Edit a task in place
+    this.Edit = function (index) {
         var task = this.tasks[index];
-        localStorage.setItem('editTask', JSON.stringify(task));
-        window.location.href = 'edit-task.html'; // Redirect to edit task page
+        var row = this.el.rows[index];
+        var taskCell = row.cells[0];
+        var assignedCell = row.cells[1];
+        var dueDateCell = row.cells[2];
+
+        // Replace content with input fields for inline editing
+        taskCell.innerHTML = `<input type="text" value="${task.task}" class="form-control">`;
+        assignedCell.innerHTML = `<select class="form-control">
+                                    ${this.users.map(user => 
+                                        `<option value="${user}" ${user === task.assignedTo ? 'selected' : ''}>${user}</option>`
+                                    ).join('')}
+                                  </select>`;
+        dueDateCell.innerHTML = `<input type="date" value="${task.dueDate}" class="form-control">`;
+
+        var taskInput = taskCell.querySelector('input');
+        var assignedInput = assignedCell.querySelector('select');
+        var dueDateInput = dueDateCell.querySelector('input');
+
+        // Save changes on blur
+        taskInput.addEventListener('blur', function () {
+            task.task = taskInput.value;
+            task.assignedTo = assignedInput.value;
+            task.dueDate = dueDateInput.value;
+
+            localStorage.setItem('tasks', JSON.stringify(this.tasks));
+            this.FetchAll();
+        }.bind(this));
     };
 
     // Delete a task
-    this.Delete = function(index) {
-        // Remove the task from the tasks array
-        this.tasks.splice(index, 1);
-
-        // Store the updated tasks array in localStorage
-        localStorage.setItem('tasks', JSON.stringify(this.tasks));
-
-        // Refresh the task list
-        this.FetchAll();
+    this.Delete = function (index) {
+        this.tasks.splice(index, 1);  // Remove the task at the specified index
+        localStorage.setItem('tasks', JSON.stringify(this.tasks));  // Update localStorage with the new tasks array
+        this.FetchAll();  // Refresh the task list
+        this.Search();  // Reapply search filter to show only tasks for the currently selected user
     };
 
+
     // Count the tasks
-    this.Count = function(data) {
-        var el   = document.getElementById('counter');
+    this.Count = function (data) {
+        var el = document.getElementById('counter');
         var name = 'Tasks';
 
         if (data) {
-            if (data == 1) {
-                name = 'Task';
-            }
-            el.innerHTML = data + ' ' + name;
+            el.innerHTML = `${data} ${data === 1 ? 'Task' : 'Tasks'}`;
         } else {
-            el.innerHTML = 'No ' + name;
+            el.innerHTML = `No ${name}`;
         }
     };
 
     // Logout function
-    this.Logout = function() {
+    this.Logout = function () {
         localStorage.removeItem('currentUser');
-        window.location.href = 'login.html'; // Redirect to login page
+        window.location.href = 'login.html';
     };
 
     // Show the logout button if the user is logged in
-    this.ShowLogoutButton = function() {
+    this.ShowLogoutButton = function () {
         if (this.isLoggedIn()) {
             document.getElementById('logout-button').style.display = 'block';
         }
