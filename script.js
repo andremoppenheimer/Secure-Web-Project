@@ -65,10 +65,11 @@ var app = new function () {
     this.Search = function (searchUser) {
         if (!searchUser) {        
             searchUser = document.getElementById('search-user').value;
+            console.log('Search User from button:', searchUser);
+        }else{
+            // Print the searchUser value to the console
+            console.log('Search User from function:', searchUser);
         }
-    // Print the searchUser value to the console
-    console.log('Search User:', searchUser);
-
         var filteredTasks = this.tasks.filter(function (task) {
             return task.assignedTo === searchUser;
         });
@@ -100,62 +101,72 @@ var app = new function () {
         }
     };
 
-// Edit a task in place
-this.Edit = function (index) {
-    var task = this.tasks[index];
-    var row = this.el.rows[index];
-    var taskCell = row.cells[0];
-    var assignedCell = row.cells[1];
-    var dueDateCell = row.cells[2];
+    // Edit a task in place
+    this.Edit = function (index) {
+        var task = this.tasks[index];
+        var row = this.el.rows[index];
+        var taskCell = row.cells[0];
+        var assignedCell = row.cells[1];
+        var dueDateCell = row.cells[2];
+        var actionCell = row.cells[3];
 
-    // Check if the row is already in edit mode
-    if (taskCell.querySelector('input')) {
-        // If already in edit mode, save the changes
-        var taskInput = taskCell.querySelector('input');
-        var assignedInput = assignedCell.querySelector('select');
-        var dueDateInput = dueDateCell.querySelector('input');
+        // If the row is already in edit mode, show the Save button
+        if (taskCell.querySelector('input')) {
+            // Display Save button
+            actionCell.innerHTML = `<button class="btn btn-success" onclick="app.Save(${index})">Save</button>`;
 
-        // Update the task properties with new values
-        task.task = taskInput.value;
-        task.assignedTo = assignedInput.value;
-        task.dueDate = dueDateInput.value;
+            // Fields are already in edit mode, allow saving changes
+        } else {
+            // Switch to edit mode (replace with input fields)
+            taskCell.innerHTML = `<input type="text" value="${task.task}" class="form-control">`;
+            assignedCell.innerHTML = `<select class="form-control">
+                                        ${this.users.map(user => 
+                                            `<option value="${user}" ${user === task.assignedTo ? 'selected' : ''}>${user}</option>`
+                                        ).join('')}
+                                      </select>`;
+            dueDateCell.innerHTML = `<input type="date" value="${task.dueDate}" class="form-control">`;
 
-        // Save the updated tasks array to localStorage
+            // Add Save button
+            actionCell.innerHTML = `<button class="btn btn-success" onclick="app.Save(${index})">Save</button>`;
+        }
+    };
+
+    // Save the edited task
+    this.Save = function (index) {
+        var task = this.tasks[index];
+        var row = this.el.rows[index];
+        var taskCell = row.cells[0];
+        var assignedCell = row.cells[1];
+        var dueDateCell = row.cells[2];
+
+        // Get updated values
+        task.task = taskCell.querySelector('input').value;
+        task.assignedTo = assignedCell.querySelector('select').value;
+        task.dueDate = dueDateCell.querySelector('input').value;
+
+        // Update localStorage with the new tasks array
         localStorage.setItem('tasks', JSON.stringify(this.tasks));
 
         // Switch to view mode and refresh the task list
         this.FetchAll();
-    } else {
-        // If not in edit mode, switch to edit mode (replace with input fields)
-        taskCell.innerHTML = `<input type="text" value="${task.task}" class="form-control">`;
-        assignedCell.innerHTML = `<select class="form-control">
-                                    ${this.users.map(user => 
-                                        `<option value="${user}" ${user === task.assignedTo ? 'selected' : ''}>${user}</option>`
-                                    ).join('')}
-                                  </select>`;
-        dueDateCell.innerHTML = `<input type="date" value="${task.dueDate}" class="form-control">`;
-
-        var taskInput = taskCell.querySelector('input');
-        var assignedInput = assignedCell.querySelector('select');
-        var dueDateInput = dueDateCell.querySelector('input');
-
-        // Optionally, you could add event listeners for 'Enter' key or blur to save changes.
-        // But here, we wait for the user to press the "Edit" button again to save the changes.
-    }
-};
+    };
 
     // Delete a task
     this.Delete = function (index) {
-    // Get the 'assignedTo' value of the task being deleted
-    var assignedToUser = this.tasks[index].assignedTo;
-        this.tasks.splice(index, 1);  // Remove the task at the specified index
-        localStorage.setItem('tasks', JSON.stringify(this.tasks));  // Update localStorage with the new tasks array
-        this.FetchAll();  // Refresh the task list
-        this.Search(assignedToUser);  // Reapply search filter to show only tasks for the currently selected user
-        // Print the searchUser value to the console
-        console.log('Delete user:', assignedToUser);
-    };
+        // Get the 'assignedTo' value of the task being deleted
+        var assignedToUser = this.tasks[index].assignedTo;
+        console.log('Assigned User of Deleted Task:', assignedToUser); // Debugging
 
+        // Remove the task at the specified index
+        this.tasks.splice(index, 1);
+
+        // Update localStorage with the new tasks array
+        localStorage.setItem('tasks', JSON.stringify(this.tasks));
+
+        // Refresh the task list and apply the search filter for the deleted task's user
+        this.FetchAll();
+        this.Search(assignedToUser); // Pass the assigned user to the search function
+    };
 
     // Count the tasks
     this.Count = function (data) {

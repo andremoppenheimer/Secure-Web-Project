@@ -32,28 +32,34 @@
                 <input type="date" id="due-date" class="form-control mb-2">
 
                 <!-- Add Task Button -->
-                <input type="submit" value="Add Task" class="btn btn-primary">
+                <input type="submit" value="Add Task" class="btn btn-primary mb-2">
             </form>
         </div>
 
-        <!-- Assigned Tasks Section -->
+        <!-- Search for Tasks Section -->
         <div class="form mb-4">
-            <h3>Assigned Tasks</h3>
-            <!-- Search Section for Filtering Tasks -->
-            <select id="search-user" class="form-control mb-2">
+            <h3>Search Tasks by User</h3>
+            <select id="search-user" onchange="app.Search()">
+                <option value="">--All Users--</option>
                 <option value="admin">Admin</option>
                 <option value="user1">User1</option>
                 <option value="user2">User2</option>
             </select>
-            <button onclick="app.Search()" class="btn btn-info mb-2">Search</button>
-            
+        </div>
+
+        <!-- Task List -->
+        <div>
+            <h3>Task List</h3>
+            <div id="counter"></div>
             <table class="table">
-                <tr class="to-do">
-                    <th>Task</th>
-                    <th>Assigned To</th>
-                    <th>Due Date</th>
-                    <th>Actions</th>
-                </tr>
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Assigned To</th>
+                        <th>Due Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
                 <tbody id="tasks"></tbody>
             </table>
         </div>
