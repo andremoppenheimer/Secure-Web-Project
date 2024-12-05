@@ -2,6 +2,7 @@ var app = new function () {
     this.el = document.getElementById('tasks');
     this.tasks = JSON.parse(localStorage.getItem('tasks')) || []; // Get tasks from localStorage
     this.currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+    this.currentSearchUser = ''; // Variable to store the current search filter
 
     // List of users (for demo purposes, can be expanded)
     this.users = ['admin', 'user1', 'user2'];
@@ -19,8 +20,11 @@ var app = new function () {
             return;
         }
 
+        // Filter tasks based on current search user (if any)
+        var tasksToDisplay = this.currentSearchUser ? this.tasks.filter(task => task.assignedTo === this.currentSearchUser) : this.tasks;
+
         // Display tasks for the logged-in user
-        this.tasks.forEach((task, i) => {
+        tasksToDisplay.forEach((task, i) => {
             data += '<tr>';
             data += `<td>${task.task}</td>`;
             data += `<td>${task.assignedTo}</td>`;
@@ -30,11 +34,11 @@ var app = new function () {
             data += '</tr>';
         });
 
-        if (this.tasks.length === 0) {
+        if (tasksToDisplay.length === 0) {
             data = '<tr><td colspan="4">No tasks found.</td></tr>';
         }
 
-        this.Count(this.tasks.length);
+        this.Count(tasksToDisplay.length);
         this.el.innerHTML = data;
     };
 
@@ -57,7 +61,7 @@ var app = new function () {
             taskInput.value = '';
             dueDateInput.value = '';
             localStorage.setItem('tasks', JSON.stringify(this.tasks));
-            this.FetchAll();
+            this.FetchAll(); // Reapply the search filter if any
         }
     };
 
@@ -65,16 +69,14 @@ var app = new function () {
     this.Search = function (searchUser) {
         if (!searchUser) {        
             searchUser = document.getElementById('search-user').value;
-            console.log('Search User from button:', searchUser);
-        }else{
-            // Print the searchUser value to the console
-            console.log('Search User from function:', searchUser);
         }
+        this.currentSearchUser = searchUser; // Store the selected user for filtering
+
+        var data = '';
         var filteredTasks = this.tasks.filter(function (task) {
             return task.assignedTo === searchUser;
         });
 
-        var data = '';
         if (filteredTasks.length > 0) {
             filteredTasks.forEach((task, i) => {
                 data += '<tr>';
@@ -108,16 +110,26 @@ var app = new function () {
         var taskCell = row.cells[0];
         var assignedCell = row.cells[1];
         var dueDateCell = row.cells[2];
-        var actionCell = row.cells[3];
 
-        // If the row is already in edit mode, show the Save button
+        // Check if the row is already in edit mode
         if (taskCell.querySelector('input')) {
-            // Display Save button
-            actionCell.innerHTML = `<button class="btn btn-success" onclick="app.Save(${index})">Save</button>`;
+            // If already in edit mode, save the changes
+            var taskInput = taskCell.querySelector('input');
+            var assignedInput = assignedCell.querySelector('select');
+            var dueDateInput = dueDateCell.querySelector('input');
 
-            // Fields are already in edit mode, allow saving changes
+            // Update the task properties with new values
+            task.task = taskInput.value;
+            task.assignedTo = assignedInput.value;
+            task.dueDate = dueDateInput.value;
+
+            // Save the updated tasks array to localStorage
+            localStorage.setItem('tasks', JSON.stringify(this.tasks));
+
+            // Switch to view mode and refresh the task list
+            this.FetchAll();
         } else {
-            // Switch to edit mode (replace with input fields)
+            // If not in edit mode, switch to edit mode (replace with input fields)
             taskCell.innerHTML = `<input type="text" value="${task.task}" class="form-control">`;
             assignedCell.innerHTML = `<select class="form-control">
                                         ${this.users.map(user => 
@@ -126,46 +138,18 @@ var app = new function () {
                                       </select>`;
             dueDateCell.innerHTML = `<input type="date" value="${task.dueDate}" class="form-control">`;
 
-            // Add Save button
-            actionCell.innerHTML = `<button class="btn btn-success" onclick="app.Save(${index})">Save</button>`;
+            var taskInput = taskCell.querySelector('input');
+            var assignedInput = assignedCell.querySelector('select');
+            var dueDateInput = dueDateCell.querySelector('input');
         }
     };
 
-    // Save the edited task
-    this.Save = function (index) {
-        var task = this.tasks[index];
-        var row = this.el.rows[index];
-        var taskCell = row.cells[0];
-        var assignedCell = row.cells[1];
-        var dueDateCell = row.cells[2];
-
-        // Get updated values
-        task.task = taskCell.querySelector('input').value;
-        task.assignedTo = assignedCell.querySelector('select').value;
-        task.dueDate = dueDateCell.querySelector('input').value;
-
-        // Update localStorage with the new tasks array
-        localStorage.setItem('tasks', JSON.stringify(this.tasks));
-
-        // Switch to view mode and refresh the task list
-        this.FetchAll();
-    };
-
-    // Delete a task
     this.Delete = function (index) {
-        // Get the 'assignedTo' value of the task being deleted
         var assignedToUser = this.tasks[index].assignedTo;
-        console.log('Assigned User of Deleted Task:', assignedToUser); // Debugging
-
-        // Remove the task at the specified index
         this.tasks.splice(index, 1);
-
-        // Update localStorage with the new tasks array
         localStorage.setItem('tasks', JSON.stringify(this.tasks));
-
-        // Refresh the task list and apply the search filter for the deleted task's user
         this.FetchAll();
-        this.Search(assignedToUser); // Pass the assigned user to the search function
+        this.Search(assignedToUser); // Reapply the search filter after delete
     };
 
     // Count the tasks

@@ -4,22 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-    <div class="container">
-        <h2>Login</h2>
-        <form id="login-form" action="javascript:void(0);" method="POST" onsubmit="app.Login()">
-            <div class="form-group">
-                <input type="text" id="username" class="form-control" placeholder="Username" required>
-            </div>
-            <div class="form-group">
-                <input type="password" id="password" class="form-control" placeholder="Password" required>
-            </div>
-            <input type="submit" value="Login" class="btn btn-primary">
-        </form>
+<div class="container mt-5">
+    <h2>Login</h2>
+    <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" class="form-control" placeholder="Enter username">
     </div>
+    <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" class="form-control" placeholder="Enter password">
+    </div>
+    <button id="login-btn" class="btn btn-primary mt-3">Login</button>
+</div>
 
-    <script src="script-login.js"></script>
+<script src="script-login.js"></script>
 </body>
 </html>

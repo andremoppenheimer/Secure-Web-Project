@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Task Manager</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <h2>Your Tasks</h2>
+    <div id="logout-button" class="mt-3">
+        <button class="btn btn-danger" onclick="app.Logout()">Logout</button>
+    </div>
+    
+    <table class="table mt-4">
+        <thead>
+            <tr>
+                <th>Task</th>
+                <th>Due Date</th>
+            </tr>
+        </thead>
+        <tbody id="tasks"></tbody>
+    </table>
+
+    <div id="counter"></div>
+</div>
+
+<script src="user_script.js"></script>
+</body>
+</html>
