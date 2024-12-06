@@ -1,30 +1,37 @@
 var app = new function () {
-    // List of users (with roles and passwords for demo purposes)
-    this.users = [
-        { username: 'admin', password: 'adminpass', role: 'admin' },
-        { username: 'user1', password: 'user1pass', role: 'user' },
-        { username: 'user2', password: 'user2pass', role: 'user' }
-    ];
-
     this.login = function () {
-        var usernameInput = document.getElementById('username').value;
+        var usernameInput = document.getElementById('email').value;
         var passwordInput = document.getElementById('password').value;
 
-        // Find user by username and password
-        var user = this.users.find(u => u.username === usernameInput && u.password === passwordInput);
+        fetch('http://localhost:3000/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: usernameInput,
+                password: passwordInput
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message === 'Login successful') {
+                // Assuming the user data (including role) is returned from the server
+                localStorage.setItem('currentUser', JSON.stringify(data.user)); // Store the logged-in user
 
-        if (user) {
-            localStorage.setItem('currentUser', JSON.stringify(user)); // Store the logged-in user in localStorage
-            
-            // Redirect based on role
-            if (user.role === 'admin') {
-                window.location.href = 'admin_index.html'; // Redirect to admin page
+                if (data.user.role === 'admin') {
+                    window.location.href = 'admin_index.html'; // Redirect to admin page
+                } else {
+                    window.location.href = 'user_index.html'; // Redirect to user page
+                }
             } else {
-                window.location.href = 'user_index.html'; // Redirect to user page
+                alert('Invalid credentials');
             }
-        } else {
-            alert('Invalid username or password');
-        }
+        })
+        .catch(err => {
+            console.error('Login failed:', err);
+            alert('An error occurred. Please try again.');
+        });
     };
 };
 
