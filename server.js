@@ -7,6 +7,7 @@ const bcrypt = require('bcrypt');
 const initializePassport = require('./passport-config');
 const mongoose = require('mongoose');
 const User = require('./models/User'); // Path to the user model
+const { strict } = require('assert');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,25 +33,38 @@ app.use(express.urlencoded({ extended: false }));
 app.use(flash());
 app.use(
     session({
-        secret: 'your_secret_key', // A secret key for signing the session ID cookie
-        resave: false,             // Don't save session if unmodified
-        saveUninitialized: false,  // Don't create session until something is stored
-        cookie: { secure: false }  // For development, set to false. For production, use true with HTTPS.
-    })
+        secret: 'your_secret_key',         // it will be updated to a secure secret when in production
+        resave: false,                     // Avoid unnecessary writes
+        saveUninitialized: false,          // Minimize attack surface
+        cookie: {
+            secure: true,                   // Enforce HTTPS
+            httpOnly: true,                 // Prevent client-side JS access
+            sameSite: 'Strict',             // Limit cross-site access
+            maxAge: 3600000                 // Session expiry (1 hour)
+        } 
+    })   // This ends the session() call
 );
+
 app.use(passport.initialize());
 app.use(passport.session());
 
 // Serve static files (login.html and others)
 app.use(express.static(path.join(__dirname)));
 
-// Routes
-app.get('/', (req, res) => {
-    if (req.isAuthenticated()) {
-        return res.send(`Hello, ${req.user.email}`); // Personalized message after login
+app.use((req, res, next) => {
+    // Allow access to the login route without a session
+    if (req.path === '/login') {
+        return next();
     }
-    res.send('Welcome to Secure Web Project!');
+
+    // Redirect to login if no session exists
+    if (!req.session || !req.session.user) {
+        return res.redirect('/login');
+    }
+
+    next();
 });
+
 
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html')); // Serve the login page
@@ -70,30 +84,6 @@ app.post('/login', passport.authenticate('local', {
     });
 });
 
-
-app.post('/register', async (req, res) => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-        return res.status(400).send('Email and password are required.');
-    }
-
-    try {
-        const existingUser = await User.findOne({ email: email });
-        if (existingUser) {
-            return res.status(400).send('User already exists.');
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({
-            email,
-            password: hashedPassword,
-        });
-        await newUser.save();
-        res.status(201).send('User registered successfully!');
-    } catch (error) {
-        res.status(500).send('Error registering user.');
-    }
-});
 
 // Logout route
 app.get('/logout', (req, res) => {
