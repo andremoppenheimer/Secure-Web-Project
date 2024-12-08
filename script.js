@@ -43,27 +43,39 @@ var app = new function () {
     };
 
     // Add a new task
-    this.Add = function () {
-        if (!this.isLoggedIn() || this.currentUser.role !== 'admin') {
-            alert('You need to log in as an admin to add tasks.');
-            return;
+    document.getElementById("taskForm").addEventListener("submit", async function(event) {
+        event.preventDefault();  // Prevent the default form submission
+    
+        const csrfToken = document.querySelector('input[name="_csrf"]').value; // Get CSRF token
+    
+        const taskData = {
+            title: document.getElementById('title').value,
+            description: document.getElementById('description').value,
+            assignedTo: document.getElementById('assignedTo').value,
+            dueDate: document.getElementById('dueDate').value
+        };
+    
+        try {
+            const response = await fetch('/tasks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'CSRF-Token': csrfToken  // Include CSRF token in the request
+                },
+                body: JSON.stringify(taskData)  // Send task data as JSON
+            });
+    
+            const result = await response.json();
+            if (response.ok) {
+                alert('Task created successfully');
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
         }
-
-        var taskInput = document.getElementById('add-todo');
-        var task = taskInput.value;
-        var assignUserSelect = document.getElementById('assign-user');
-        var assignedUser = assignUserSelect.value;
-        var dueDateInput = document.getElementById('due-date');
-        var dueDate = dueDateInput.value;
-
-        if (task && dueDate) {
-            this.tasks.push({ task: task.trim(), assignedTo: assignedUser, dueDate: dueDate });
-            taskInput.value = '';
-            dueDateInput.value = '';
-            localStorage.setItem('tasks', JSON.stringify(this.tasks));
-            this.FetchAll(); // Reapply the search filter if any
-        }
-    };
+    });
+    
 
     // Search for tasks based on the selected user
     this.Search = function (searchUser) {

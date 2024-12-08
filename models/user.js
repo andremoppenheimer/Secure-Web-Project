@@ -15,6 +15,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['user', 'admin'],  // Limiting roles to 'user' and 'admin'
         default: 'user'  // Default role is 'user'
+    },
+    username: {
+        type: String,
+        required: true,
+        unique: true  // Ensures usernames are unique
     }
 });
 

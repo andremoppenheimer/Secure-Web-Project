@@ -1,5 +1,8 @@
 const express = require('express');
 const session = require('express-session');
+const cookieParser = require('cookie-parser');
+const csrf = require('csurf');
+const csrfProtection = csrf({ cookie: true });
 const passport = require('passport');
 const flash = require('express-flash');
 const path = require('path');
@@ -10,6 +13,7 @@ const User = require('./models/user'); // Path to the user model
 const Task = require('./models/task'); // Path to the task model
 const { strict } = require('assert');
 const MongoStore = require('connect-mongo');
+const { body, validationResult } = require('express-validator');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,10 +36,11 @@ initializePassport(
     id => User.findById(id)
 );
 
-// Middleware setting cookies
+// Middleware 
 app.use(express.json()); // For parsing JSON requests
 app.use(express.urlencoded({ extended: false }));
 app.use(flash());
+app.use(cookieParser());
 app.use(
     session({
         secret: 'your_secret_key',         // it will be updated to a secure secret when in production
@@ -54,6 +59,7 @@ app.use(
         } 
     })   // This ends the session() call
 );
+app.use(cookieParser());
 
 // Middleware to check authorization
 function ensureauthorized(roles) {
@@ -66,6 +72,23 @@ function ensureauthorized(roles) {
     };
 }
 
+// Middleware to sanitaze input
+function sanitizeInput(req, res, next) {
+    for (let key in req.body) {
+        if (req.body.hasOwnProperty(key) && typeof req.body[key] === 'string') {
+            req.body[key] = req.body[key].trim().escape().stripLow();
+        }
+    }
+    next();
+}
+
+// Middleware for validating task input
+const validateTask = [
+    body('title').isLength({ min: 1 }).withMessage('Title is required'),
+    body('description').isLength({ min: 1 }).withMessage('Description is required'),
+    body('assignedTo').isLength({ min: 1 }).withMessage('Username is required'),
+    body('dueDate').isISO8601().withMessage('Due date must be in a valid format')
+];
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -73,18 +96,20 @@ app.use(passport.session());
 // Serve static files (login.html and others)
 app.use(express.static(path.join(__dirname)));
 
-// Globally checking if the user is logged in, if not, redirecting to login.
+// Middleware to check if the user is logged in and redirecting to log in or applying csrf protection
 app.use((req, res, next) => {
-    // Allow access to the login route without a session
+    // Allow unrestricted access to the login route
     if (req.path === '/login') {
         return next();
     }
-    // Redirect to login if no session exists
+
+    // Check if the user is logged in
     if (!req.session || !req.session.user) {
         return res.redirect('/login');
     }
 
-    next();
+    // Apply CSRF protection for other routes
+    csrfProtection(req, res, next);
 });
 
 
@@ -107,15 +132,19 @@ app.post('/login', passport.authenticate('local', {
     });
 });
 
+app.get('/csrf-token', csrfProtection, (req, res) => {
+    res.json({ csrfToken: req.csrfToken() });
+});
 
 // Route to create task, only allowed to admins.
-app.post('/tasks', ensureauthorized(['admin']), async (req, res) => {
-    const { title, description, assignedTo, dueDate } = req.body;
-
-    // Ensure all required fields are provided
-    if (!title || !description || !assignedTo || !dueDate) {
-        return res.status(400).json({ message: 'All fields are required.' });
+app.post('/tasks', csrfProtection, ensureauthorized(['admin'], sanitizeInput, validateTask), async (req, res) => {
+      
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
     }
+
+    const { title, description, assignedTo, dueDate } = req.body;
 
     try {
         // Find the user by username (not by _id)
