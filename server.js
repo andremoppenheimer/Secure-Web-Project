@@ -170,6 +170,65 @@ app.post('/tasks', csrfProtection, ensureauthorized(['admin'], sanitizeInput, va
     }
 });
 
+// Search for tasks assigned to a specific user
+app.get('/search', ensureauthorized(['admin']), async (req, res) => {
+    const username = req.query.username;  // Get username from query params
+
+    if (!username) {
+        return res.status(400).json({ message: 'Username is required' });
+    }
+
+    try {
+        // Find the user by username
+        const user = await User.findOne({ username: username });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Find all tasks assigned to this user
+        const tasks = await Task.find({ assignedTo: user._id })  // Assuming `assignedTo` is a userId reference
+            .select('title description dueDate');  // Only select relevant fields
+
+        if (tasks.length === 0) {
+            return res.status(404).json({ message: 'No tasks found for this user' });
+        }
+
+        // Return tasks for the user
+        res.json(tasks);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// Search all tasks assigned to all users
+app.get('/searchall', ensureauthorized(['admin']), async (req, res) => {
+    try {
+        // Find all tasks and populate user information
+        const tasks = await Task.find()
+            .populate('assignedTo', 'username')  // Assuming `assignedTo` is a user reference
+            .select('title description assignedTo dueDate');
+
+        if (tasks.length === 0) {
+            return res.status(404).json({ message: 'No tasks found' });
+        }
+
+        // Group tasks by user
+        const groupedTasks = tasks.reduce((acc, task) => {
+            const user = task.assignedTo?.username || 'Unassigned';
+            if (!acc[user]) {
+                acc[user] = [];
+            }
+            acc[user].push(task);
+            return acc;
+        }, {});
+
+        // Return grouped tasks
+        res.json(groupedTasks);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
 // Logout route
 app.get('/logout', (req, res) => {
     req.logout((err) => {

@@ -12,35 +12,45 @@ var app = new function () {
         return this.currentUser !== null;
     };
 
-    // Fetch all tasks
-    this.FetchAll = function () {
-        var data = '';
-        if (!this.isLoggedIn()) {
-            alert('You need to log in to view tasks.');
+    document.getElementById("taskSearchForm").addEventListener("submit", async (event) => {
+        event.preventDefault(); // Prevent form submission
+        const username = document.getElementById("searchUsername").value;
+
+        if (!username) {
+            alert("Please enter a username.");
             return;
         }
-
-        // Filter tasks based on current search user (if any)
-        var tasksToDisplay = this.currentSearchUser ? this.tasks.filter(task => task.assignedTo === this.currentSearchUser) : this.tasks;
-
-        // Display tasks for the logged-in user
-        tasksToDisplay.forEach((task, i) => {
-            data += '<tr>';
-            data += `<td>${task.task}</td>`;
-            data += `<td>${task.assignedTo}</td>`;
-            data += `<td>${task.dueDate}</td>`;
-            data += `<td><button class="btn btn-primary" onclick="app.HandleAction('edit', ${i})">Edit</button> `;
-            data += `<button class="btn btn-danger" onclick="app.HandleAction('delete', ${i})">Delete</button></td>`;
-            data += '</tr>';
-        });
-
-        if (tasksToDisplay.length === 0) {
-            data = '<tr><td colspan="4">No tasks found.</td></tr>';
+    
+        try {
+            // Make the GET request to the /search endpoint
+            const response = await fetch(`/search?username=${encodeURIComponent(username)}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+    
+            const data = await response.json();
+    
+            if (!response.ok) {
+                throw new Error(data.message || "Failed to fetch tasks.");
+            }
+    
+            // Display tasks
+            const taskList = document.getElementById("taskList");
+            taskList.innerHTML = ""; // Clear previous results
+    
+            data.forEach((task) => {
+                const listItem = document.createElement("li");
+                listItem.className = "list-group-item";
+                listItem.textContent = `Title: ${task.title}, Description: ${task.description}, Due Date: ${task.dueDate}`;
+                taskList.appendChild(listItem);
+            });
+        } catch (error) {
+            alert(error.message || "An error occurred while fetching tasks.");
         }
-
-        this.Count(tasksToDisplay.length);
-        this.el.innerHTML = data;
-    };
+    });
+    
 
     // Add a new task
     document.getElementById("taskForm").addEventListener("submit", async function(event) {
