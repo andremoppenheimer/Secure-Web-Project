@@ -170,7 +170,7 @@ app.post('/tasks', csrfProtection, ensureauthorized(['admin'], sanitizeInput, va
     }
 });
 
-// Search for tasks assigned to a specific user
+// Route to Search for tasks assigned to a specific user
 app.get('/search', ensureauthorized(['admin']), async (req, res) => {
     const username = req.query.username;  // Get username from query params
 
@@ -200,7 +200,7 @@ app.get('/search', ensureauthorized(['admin']), async (req, res) => {
     }
 });
 
-// Search all tasks assigned to all users
+// Route to Search all tasks assigned to all users
 app.get('/searchall', ensureauthorized(['admin']), async (req, res) => {
     try {
         // Find all tasks and populate user information
@@ -228,6 +228,25 @@ app.get('/searchall', ensureauthorized(['admin']), async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
+
+// Route to delete a task by title, only allowed to admins.
+app.delete('/delete', csrfProtection, ensureauthorized(['admin']), async (req, res) => {
+    const { title } = req.body; // Get the title from the request body
+
+    try {
+        // Find the task by title
+        console.log(`Title = :${title}`);
+        const task = await Task.findOneAndDelete({ title });
+        if (!task) {
+            return res.status(404).json({ message: `Task with title '${title}' not found.` });
+        }
+        console.log(`Task with title '${title}' deleted successfully.`);
+        res.status(200).json({ message: `Task with title '${title}' deleted successfully.` });
+    } catch (error) {
+        res.status(500).json({ message: `Error deleting task with title '${title}'.`, error: error.message });
+    }
+});
+
 
 // Logout route
 app.get('/logout', (req, res) => {

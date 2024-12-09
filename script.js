@@ -84,6 +84,67 @@ var app = new function () {
             alert('Error: ' + error.message);
         }
     });
+
+    //delete task
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Fetch CSRF token dynamically and set it in the form
+        try {
+            const response = await fetch('/csrf-token');
+            const data = await response.json();
+            document.getElementById('csrfToken').value = data.csrfToken; // Set CSRF token dynamically
+        } catch (error) {
+            console.error('Error fetching CSRF token:', error);
+        }
+    
+        // Handle delete task form submission
+        const taskDeleteForm = document.getElementById('taskDeleteForm');
+        taskDeleteForm.addEventListener('submit', async (event) => {
+            event.preventDefault();  // Prevent default form submission
+    
+            // Get the title from the input field
+            const title = document.getElementById('deleteTitle').value;
+            const csrfToken = document.getElementById('csrfToken').value;
+    
+            // Ensure title is not empty
+            if (!title) {
+                alert('Please enter a task title.');
+                return;
+            }
+    
+            try {
+                // Send DELETE request with CSRF token
+                const response = await fetch('/delete', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken // Include CSRF token in the request header
+                    },
+                    body: JSON.stringify({ title: title })  // Send the task title to be deleted
+                });
+    
+                const result = await response.json();
+    
+                if (response.ok) {
+                    alert(result.message); // Show success message
+                    // Remove the task from the DOM or reset the form
+                    taskDeleteForm.reset();  // Clear the input field after successful delete
+                } else {
+                    alert(result.message); // Show error message
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+    });
+    
+    
+    // Function to fetch CSRF token from the server
+    async function getCsrfToken() {
+        const response = await fetch('/csrf-token');
+        const data = await response.json();
+        return data.csrfToken;
+    }
+    
     
     // Search for tasks based on the selected user
     this.Search = function (searchUser) {

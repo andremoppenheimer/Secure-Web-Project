@@ -53,6 +53,16 @@
     <div id="counter" class="mt-3 text-center"></div>
 </div>
 
+<!-- Delete Tasks Form -->
+<form id="taskDeleteForm" class="mt-4">
+    <h3>Delete Task by Title</h3>
+    <div class="form-group">
+        <input type="text" id="deleteTitle" name="title" class="form-control" placeholder="Enter Title" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Delete Task</button>
+</form>
+
+
 <script>
     // Ensure only admin can access the page
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
