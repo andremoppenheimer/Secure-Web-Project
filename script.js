@@ -50,7 +50,6 @@ var app = new function () {
             alert(error.message || "An error occurred while fetching tasks.");
         }
     });
-    
 
     // Add a new task
     document.getElementById("taskForm").addEventListener("submit", async function(event) {
@@ -86,7 +85,6 @@ var app = new function () {
         }
     });
     
-
     // Search for tasks based on the selected user
     this.Search = function (searchUser) {
         if (!searchUser) {        
@@ -116,64 +114,6 @@ var app = new function () {
         this.el.innerHTML = data;
     };
 
-    // Handle Edit or Delete actions
-    this.HandleAction = function (action, index) {
-        if (action === 'edit') {
-            this.Edit(index);
-        } else if (action === 'delete') {
-            this.Delete(index);
-        }
-    };
-
-    // Edit a task in place
-    this.Edit = function (index) {
-        var task = this.tasks[index];
-        var row = this.el.rows[index];
-        var taskCell = row.cells[0];
-        var assignedCell = row.cells[1];
-        var dueDateCell = row.cells[2];
-
-        // Check if the row is already in edit mode
-        if (taskCell.querySelector('input')) {
-            // If already in edit mode, save the changes
-            var taskInput = taskCell.querySelector('input');
-            var assignedInput = assignedCell.querySelector('select');
-            var dueDateInput = dueDateCell.querySelector('input');
-
-            // Update the task properties with new values
-            task.task = taskInput.value;
-            task.assignedTo = assignedInput.value;
-            task.dueDate = dueDateInput.value;
-
-            // Save the updated tasks array to localStorage
-            localStorage.setItem('tasks', JSON.stringify(this.tasks));
-
-            // Switch to view mode and refresh the task list
-            this.FetchAll();
-        } else {
-            // If not in edit mode, switch to edit mode (replace with input fields)
-            taskCell.innerHTML = `<input type="text" value="${task.task}" class="form-control">`;
-            assignedCell.innerHTML = `<select class="form-control">
-                                        ${this.users.map(user => 
-                                            `<option value="${user}" ${user === task.assignedTo ? 'selected' : ''}>${user}</option>`
-                                        ).join('')}
-                                      </select>`;
-            dueDateCell.innerHTML = `<input type="date" value="${task.dueDate}" class="form-control">`;
-
-            var taskInput = taskCell.querySelector('input');
-            var assignedInput = assignedCell.querySelector('select');
-            var dueDateInput = dueDateCell.querySelector('input');
-        }
-    };
-
-    this.Delete = function (index) {
-        var assignedToUser = this.tasks[index].assignedTo;
-        this.tasks.splice(index, 1);
-        localStorage.setItem('tasks', JSON.stringify(this.tasks));
-        this.FetchAll();
-        this.Search(assignedToUser); // Reapply the search filter after delete
-    };
-
     // Count the tasks
     this.Count = function (data) {
         var el = document.getElementById('counter');
@@ -201,5 +141,4 @@ var app = new function () {
 };
 
 // Initialize the app
-app.FetchAll();
 app.ShowLogoutButton();
