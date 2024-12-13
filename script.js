@@ -126,7 +126,7 @@ var app = new function () {
     
                 if (response.ok) {
                     alert(result.message); // Show success message
-                    // Remove the task from the DOM or reset the form
+                    // Optionally remove the task from the DOM or reset the form
                     taskDeleteForm.reset();  // Clear the input field after successful delete
                 } else {
                     alert(result.message); // Show error message
@@ -137,6 +137,67 @@ var app = new function () {
         });
     });
     
+    // EDIT
+    // Fetch CSRF token for edit form
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/csrf-token');
+        const data = await response.json();
+        document.getElementById('csrfTokenEdit').value = data.csrfToken; // Set CSRF token dynamically
+    } catch (error) {
+        console.error('Error fetching CSRF token for edit:', error);
+    }
+});
+
+// Handle Edit Task Form Submission
+document.getElementById('taskEditForm').addEventListener('submit', async (event) => {
+    event.preventDefault(); // Prevent default form submission behavior
+
+    const currentTitle = document.getElementById('currentTitle').value.trim();
+    const newTitle = document.getElementById('newTitle').value.trim();
+    const description = document.getElementById('descriptionEdit').value.trim();
+    const assignedTo = document.getElementById('assignedToEdit').value.trim();
+    const dueDate = document.getElementById('dueDateEdit').value;
+
+    const csrfToken = document.getElementById('csrfTokenEdit').value;
+
+    if (!currentTitle) {
+        alert('Please enter the current task title.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/edit', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'CSRF-Token': csrfToken, // Include CSRF token in the headers
+            },
+            body: JSON.stringify({ 
+                title: currentTitle, 
+                newTitle, 
+                description, 
+                assignedTo, 
+                dueDate 
+            }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert(result.message); // Show success message
+        } else {
+            alert(`Error: ${result.message}`); // Show error message
+        }
+    } catch (error) {
+        console.error('Error editing task:', error);
+        alert('An error occurred while editing the task. Please try again.');
+    }
+
+    // Optionally, reset the form after submission
+    document.getElementById('taskEditForm').reset();
+});
+
     
     // Function to fetch CSRF token from the server
     async function getCsrfToken() {

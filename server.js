@@ -26,8 +26,8 @@ mongoose.connect(mongoURL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 })
-.then(() => console.log('MongoDB connected'))
-.catch((err) => console.log('Error connecting to MongoDB: ', err));
+    .then(() => console.log('MongoDB connected'))
+    .catch((err) => console.log('Error connecting to MongoDB: ', err));
 
 // Passport configuration
 initializePassport(
@@ -46,7 +46,7 @@ app.use(
         secret: 'your_secret_key',         // it will be updated to a secure secret when in production
         resave: false,                     // Avoid unnecessary writes
         saveUninitialized: false,          // Minimize attack surface
-        store: MongoStore.create ({
+        store: MongoStore.create({
             mongoUrl: mongoURL,
             collectionName: 'sessions',
             ttl: 3600,
@@ -56,7 +56,7 @@ app.use(
             httpOnly: true,                 // Prevent client-side JS access
             sameSite: 'Strict',             // Limit cross-site access
             maxAge: 3600000                 // Session expiry (1 hour)
-        } 
+        }
     })   // This ends the session() call
 );
 app.use(cookieParser());
@@ -138,7 +138,7 @@ app.get('/csrf-token', csrfProtection, (req, res) => {
 
 // Route to create task, only allowed to admins.
 app.post('/tasks', csrfProtection, ensureauthorized(['admin'], sanitizeInput, validateTask), async (req, res) => {
-      
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -149,7 +149,7 @@ app.post('/tasks', csrfProtection, ensureauthorized(['admin'], sanitizeInput, va
     try {
         // Find the user by username (not by _id)
         const user = await User.findOne({ username: assignedTo });
-        
+
         if (!user) {
             return res.status(400).json({ message: 'User not found.' });
         }
@@ -244,6 +244,35 @@ app.delete('/delete', csrfProtection, ensureauthorized(['admin']), async (req, r
         res.status(200).json({ message: `Task with title '${title}' deleted successfully.` });
     } catch (error) {
         res.status(500).json({ message: `Error deleting task with title '${title}'.`, error: error.message });
+    }
+});
+
+// Route to update a task by title, only allowed to admins
+app.put('/edit', csrfProtection, ensureauthorized(['admin']), async (req, res) => {
+    const { title, newTitle, description, assignedTo, dueDate } = req.body; // Extract task details from the request body
+
+    try {
+        // Find the task by title and update its fields
+        const updatedTask = await Task.findOneAndUpdate(
+            { title }, // Locate the task using the title
+            {
+                title: newTitle || title, // Update the title if a new one is provided
+                description,
+                assignedTo,
+                dueDate
+            },
+            { new: true } // Return the updated document
+        );
+
+        if (!updatedTask) {
+            return res.status(404).json({ message: `Task with title '${title}' not found.` });
+        }
+
+        // Respond with the updated task details
+        res.status(200).json({ message: 'Task updated successfully.', task: updatedTask });
+    } catch (error) {
+        console.error('Error updating task:', error); // Log the error for debugging
+        res.status(500).json({ message: 'Error updating task.', error: error.message });
     }
 });
 
