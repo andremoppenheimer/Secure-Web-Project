@@ -7,11 +7,6 @@ var app = new function () {
     // List of users (for demo purposes, can be expanded)
     this.users = ['admin', 'user1', 'user2'];
 
-    // Check if the user is logged in
-    this.isLoggedIn = function () {
-        return this.currentUser !== null;
-    };
-
     document.getElementById("taskSearchForm").addEventListener("submit", async (event) => {
         event.preventDefault(); // Prevent form submission
         const username = document.getElementById("searchUsername").value;
@@ -248,19 +243,28 @@ document.getElementById('taskEditForm').addEventListener('submit', async (event)
         }
     };
 
-    // Logout function
-    this.Logout = function () {
-        localStorage.removeItem('currentUser');
-        window.location.href = 'login.html';
-    };
-
-    // Show the logout button if the user is logged in
-    this.ShowLogoutButton = function () {
-        if (this.isLoggedIn()) {
-            document.getElementById('logout-button').style.display = 'block';
+    document.getElementById('logoutBtn').addEventListener('click', async function () {
+        try {
+            const response = await fetch('/logout', { 
+                method: 'POST',  // Use POST for logout
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Include any necessary credentials (like cookies or tokens) if needed
+                },
+                redirect: 'follow'  // Follow the redirect automatically
+            });
+    
+            if (response.ok) {
+                window.location.href = 'login.html';  // Redirect to login page after successful logout
+            } else {
+                alert('Failed to logout. Please try again.');
+            }
+        } catch (error) {
+            console.error('Logout failed:', error);
+            alert('An error occurred while logging out.');
         }
-    };
-};
+    });
+    
+    
 
-// Initialize the app
-app.ShowLogoutButton();
+};

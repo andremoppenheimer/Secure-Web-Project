@@ -11,8 +11,9 @@
     <h2 class="text-center">Admin Task Manager</h2>
     <!-- Logout Button -->
     <div id="logout-button" class="text-right">
-        <button class="btn btn-danger" onclick="app.Logout()">Logout</button>
+    <button id="logoutBtn" class="btn btn-danger">Logout</button>
     </div>
+
 
 
 <!-- Search Tasks Form -->
@@ -84,26 +85,6 @@
     </div>
     <button type="submit" class="btn btn-primary">Delete Task</button>
 </form>
-
-
-<script>
-    // Ensure only admin can access the page
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser || currentUser.role !== 'admin') {
-        window.location.href = 'login.html'; // Redirect to login if not admin
-    }
-
-    // Fetch CSRF token dynamically and set it in the form
-    document.addEventListener('DOMContentLoaded', async () => {
-        try {
-            const response = await fetch('/csrf-token');
-            const data = await response.json();
-            document.getElementById('csrfToken').value = data.csrfToken; // Set CSRF token dynamically
-        } catch (error) {
-            console.error('Error fetching CSRF token:', error);
-        }
-    });
-</script>
 
 <script src="script.js"></script>
 </body>

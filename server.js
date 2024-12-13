@@ -6,7 +6,6 @@ const csrfProtection = csrf({ cookie: true });
 const passport = require('passport');
 const flash = require('express-flash');
 const path = require('path');
-const bcrypt = require('bcrypt');
 const initializePassport = require('./passport-config');
 const mongoose = require('mongoose');
 const User = require('./models/user'); // Path to the user model
@@ -14,7 +13,7 @@ const Task = require('./models/task'); // Path to the task model
 const { strict } = require('assert');
 const MongoStore = require('connect-mongo');
 const { body, validationResult } = require('express-validator');
-
+const helmet = require("helmet")
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -37,6 +36,7 @@ initializePassport(
 );
 
 // Middleware 
+app.use(helmet()); // for securing headers
 app.use(express.json()); // For parsing JSON requests
 app.use(express.urlencoded({ extended: false }));
 app.use(flash());
@@ -52,7 +52,7 @@ app.use(
             ttl: 3600,
         }),
         cookie: {
-            secure: false,                   // Enforce HTTPS
+            secure: false,                   // Enforce HTTPS. It will be updated to true when in production
             httpOnly: true,                 // Prevent client-side JS access
             sameSite: 'Strict',             // Limit cross-site access
             maxAge: 3600000                 // Session expiry (1 hour)
@@ -278,12 +278,21 @@ app.put('/edit', csrfProtection, ensureauthorized(['admin']), async (req, res) =
 
 
 // Logout route
-app.get('/logout', (req, res) => {
-    req.logout((err) => {
-        if (err) return next(err);
-        res.redirect('/login');
+app.post('/logout', csrfProtection, (req, res) => {
+    // Verify CSRF token
+    if (req.headers['csrf-token'] !== req.csrfToken()) {
+        return res.status(403).send('Invalid CSRF token');
+    }
+
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).send('Failed to logout.');
+        }
+        res.redirect('/login'); // Redirect to login page after logging out
     });
 });
+
+
 
 // Start the server
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
