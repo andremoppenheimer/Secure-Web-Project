@@ -8,22 +8,24 @@
 </head>
 <body>
 <div class="container mt-5">
-    <h2>Your Tasks</h2>
-    <div id="logout-button" class="mt-3">
-        <button class="btn btn-danger" onclick="app.Logout()">Logout</button>
+    <h2 class="text-center">User Task Manager</h2>
+    <!-- Logout Button -->
+    <div id="logout-button" class="text-right">
+    <button id="logoutBtn" class="btn btn-danger">Logout</button>
     </div>
-    
-    <table class="table mt-4">
-        <thead>
-            <tr>
-                <th>Task</th>
-                <th>Due Date</th>
-            </tr>
-        </thead>
-        <tbody id="tasks"></tbody>
-    </table>
+<!-- Search Tasks Form -->
+<form id="taskSearchForm" class="mt-4">
+    <h3>Search Tasks by Username</h3>
+    <div class="form-group">
+        <input type="text" id="searchUsername" name="username" class="form-control" placeholder="Enter Username" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Search Tasks</button>
+</form>
 
-    <div id="counter"></div>
+<!-- Search Results -->
+<div id="searchResults" class="mt-4">
+    <h4>Search Results:</h4>
+    <ul id="taskList" class="list-group"></ul>
 </div>
 
 <script src="user_script.js"></script>

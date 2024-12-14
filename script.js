@@ -1,12 +1,4 @@
 var app = new function () {
-    this.el = document.getElementById('tasks');
-    this.tasks = JSON.parse(localStorage.getItem('tasks')) || []; // Get tasks from localStorage
-    this.currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-    this.currentSearchUser = ''; // Variable to store the current search filter
-
-    // List of users (for demo purposes, can be expanded)
-    this.users = ['admin', 'user1', 'user2'];
-
     document.getElementById("taskSearchForm").addEventListener("submit", async (event) => {
         event.preventDefault(); // Prevent form submission
         const username = document.getElementById("searchUsername").value;
@@ -50,8 +42,8 @@ var app = new function () {
     document.getElementById("taskForm").addEventListener("submit", async function(event) {
         event.preventDefault();  // Prevent the default form submission
     
-        const csrfToken = document.querySelector('input[name="_csrf"]').value; // Get CSRF token
-    
+          const csrfToken = document.getElementById('csrfToken').value; // Get CSRF token dynamically
+   
         const taskData = {
             title: document.getElementById('title').value,
             description: document.getElementById('description').value,
@@ -79,6 +71,7 @@ var app = new function () {
             alert('Error: ' + error.message);
         }
     });
+const csrfToken = document.getElementById('csrfTokenEdit').value; // Get CSRF token
 
     //delete task
     document.addEventListener('DOMContentLoaded', async () => {
@@ -132,7 +125,6 @@ var app = new function () {
         });
     });
     
-    // EDIT
     // Fetch CSRF token for edit form
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -201,57 +193,17 @@ document.getElementById('taskEditForm').addEventListener('submit', async (event)
         return data.csrfToken;
     }
     
-    
-    // Search for tasks based on the selected user
-    this.Search = function (searchUser) {
-        if (!searchUser) {        
-            searchUser = document.getElementById('search-user').value;
-        }
-        this.currentSearchUser = searchUser; // Store the selected user for filtering
-
-        var data = '';
-        var filteredTasks = this.tasks.filter(function (task) {
-            return task.assignedTo === searchUser;
-        });
-
-        if (filteredTasks.length > 0) {
-            filteredTasks.forEach((task, i) => {
-                data += '<tr>';
-                data += `<td>${task.task}</td>`;
-                data += `<td>${task.assignedTo}</td>`;
-                data += `<td>${task.dueDate}</td>`;
-                data += `<td><button class="btn btn-primary" onclick="app.HandleAction('edit', ${i})">Edit</button> `;
-                data += `<button class="btn btn-danger" onclick="app.HandleAction('delete', ${i})">Delete</button></td>`;
-                data += '</tr>';
-            });
-        } else {
-            data = '<tr><td colspan="4">No tasks found for the selected user.</td></tr>';
-        }
-
-        this.el.innerHTML = data;
-    };
-
-    // Count the tasks
-    this.Count = function (data) {
-        var el = document.getElementById('counter');
-        var name = 'Tasks';
-
-        if (data) {
-            el.innerHTML = `${data} ${data === 1 ? 'Task' : 'Tasks'}`;
-        } else {
-            el.innerHTML = `No ${name}`;
-        }
-    };
-
     document.getElementById('logoutBtn').addEventListener('click', async function () {
         try {
+            const csrfToken = document.getElementById('csrfToken').value; // Get CSRF token dynamically
             const response = await fetch('/logout', { 
                 method: 'POST',  // Use POST for logout
                 headers: {
                     'Content-Type': 'application/json',
+                    'CSRF-Token': csrfToken,
                     // Include any necessary credentials (like cookies or tokens) if needed
                 },
-                redirect: 'follow'  // Follow the redirect automatically
+     redirect: 'follow'  // Follow the redirect automatically
             });
     
             if (response.ok) {
