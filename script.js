@@ -1,4 +1,17 @@
 var app = new function () {
+    let csrfToken = ''; // Declare a global variable to store the CSRF token
+
+    // Fetch the CSRF token once when the page loads
+    document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/csrf-token');
+        const data = await response.json();
+        csrfToken = data.csrfToken;  // Store the CSRF token in the global variable
+    } catch (error) {
+        console.error('Error fetching CSRF token:', error);
+    }
+    });
+
     document.getElementById("taskSearchForm").addEventListener("submit", async (event) => {
         event.preventDefault(); // Prevent form submission
         const username = document.getElementById("searchUsername").value;
@@ -42,8 +55,6 @@ var app = new function () {
     document.getElementById("taskForm").addEventListener("submit", async function(event) {
         event.preventDefault();  // Prevent the default form submission
     
-          const csrfToken = document.getElementById('csrfToken').value; // Get CSRF token dynamically
-   
         const taskData = {
             title: document.getElementById('title').value,
             description: document.getElementById('description').value,
@@ -71,19 +82,9 @@ var app = new function () {
             alert('Error: ' + error.message);
         }
     });
-const csrfToken = document.getElementById('csrfTokenEdit').value; // Get CSRF token
 
     //delete task
-    document.addEventListener('DOMContentLoaded', async () => {
-        // Fetch CSRF token dynamically and set it in the form
-        try {
-            const response = await fetch('/csrf-token');
-            const data = await response.json();
-            document.getElementById('csrfToken').value = data.csrfToken; // Set CSRF token dynamically
-        } catch (error) {
-            console.error('Error fetching CSRF token:', error);
-        }
-    
+    document.addEventListener('DOMContentLoaded', async () => {    
         // Handle delete task form submission
         const taskDeleteForm = document.getElementById('taskDeleteForm');
         taskDeleteForm.addEventListener('submit', async (event) => {
@@ -91,7 +92,6 @@ const csrfToken = document.getElementById('csrfTokenEdit').value; // Get CSRF to
     
             // Get the title from the input field
             const title = document.getElementById('deleteTitle').value;
-            const csrfToken = document.getElementById('csrfToken').value;
     
             // Ensure title is not empty
             if (!title) {
@@ -125,17 +125,6 @@ const csrfToken = document.getElementById('csrfTokenEdit').value; // Get CSRF to
         });
     });
     
-    // Fetch CSRF token for edit form
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const response = await fetch('/csrf-token');
-        const data = await response.json();
-        document.getElementById('csrfTokenEdit').value = data.csrfToken; // Set CSRF token dynamically
-    } catch (error) {
-        console.error('Error fetching CSRF token for edit:', error);
-    }
-});
-
 // Handle Edit Task Form Submission
 document.getElementById('taskEditForm').addEventListener('submit', async (event) => {
     event.preventDefault(); // Prevent default form submission behavior
@@ -145,8 +134,6 @@ document.getElementById('taskEditForm').addEventListener('submit', async (event)
     const description = document.getElementById('descriptionEdit').value.trim();
     const assignedTo = document.getElementById('assignedToEdit').value.trim();
     const dueDate = document.getElementById('dueDateEdit').value;
-
-    const csrfToken = document.getElementById('csrfTokenEdit').value;
 
     if (!currentTitle) {
         alert('Please enter the current task title.');
@@ -184,26 +171,17 @@ document.getElementById('taskEditForm').addEventListener('submit', async (event)
     // Optionally, reset the form after submission
     document.getElementById('taskEditForm').reset();
 });
-
-    
-    // Function to fetch CSRF token from the server
-    async function getCsrfToken() {
-        const response = await fetch('/csrf-token');
-        const data = await response.json();
-        return data.csrfToken;
-    }
     
     document.getElementById('logoutBtn').addEventListener('click', async function () {
         try {
-            const csrfToken = document.getElementById('csrfToken').value; // Get CSRF token dynamically
             const response = await fetch('/logout', { 
                 method: 'POST',  // Use POST for logout
                 headers: {
                     'Content-Type': 'application/json',
                     'CSRF-Token': csrfToken,
-                    // Include any necessary credentials (like cookies or tokens) if needed
                 },
-     redirect: 'follow'  // Follow the redirect automatically
+                credentials: 'include',
+                redirect: 'follow'  // Follow the redirect automatically
             });
     
             if (response.ok) {

@@ -171,7 +171,7 @@ app.post('/tasks', csrfProtection, ensureauthorized(['admin'], sanitizeInput, va
 });
 
 // Route to Search for tasks assigned to a specific user
-app.get('/search', ensureauthorized(['admin']), async (req, res) => {
+app.get('/search', async (req, res) => {
     const username = req.query.username;  // Get username from query params
 
     if (!username) {
@@ -279,11 +279,6 @@ app.put('/edit', csrfProtection, ensureauthorized(['admin']), async (req, res) =
 
 // Logout route
 app.post('/logout', csrfProtection, (req, res) => {
-    // Verify CSRF token
-    if (req.headers['csrf-token'] !== req.csrfToken()) {
-        return res.status(403).send('Invalid CSRF token');
-    }
-
     req.session.destroy((err) => {
         if (err) {
             return res.status(500).send('Failed to logout.');
@@ -291,8 +286,6 @@ app.post('/logout', csrfProtection, (req, res) => {
         res.redirect('/login'); // Redirect to login page after logging out
     });
 });
-
-
 
 // Start the server
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
